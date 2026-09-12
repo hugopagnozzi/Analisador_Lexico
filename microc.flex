@@ -123,6 +123,7 @@ static void guarda_lexema(void)
 DIGIT       [0-9]
 LETRA       [a-zA-Z_]
 ALFANUM     [a-zA-Z0-9_]
+ESCAPE      \\[nt\\\"0]
 
 %x COMMENT
 %x STRING
@@ -153,6 +154,16 @@ ALFANUM     [a-zA-Z0-9_]
 
 [ \t\r]+            { 
                         coluna_atual += yyleng; 
+                    }
+
+ /* --- Caracteres de escape ---------------------------- */
+
+{ESCAPE}            { 
+                        microc_yylval.error_msg = strdup(yytext);
+                        coluna_erro = coluna_atual;
+                        linha_erro = linha_atual;
+                        coluna_atual += yyleng;
+                        return UNDEF;
                     }
 
  /* --- Comentarios ------------------------------------------------------
@@ -221,68 +232,68 @@ ALFANUM     [a-zA-Z0-9_]
 
  /* --- Constantes de caractere ----------------------------------------- */
 
-'[^'\n]?'           {
-                        if(memchr(yytext, '\0', yyleng) != NULL)
-                        {
-                            microc_yylval.error_msg = "CHAR contem caractere nulo";
-                            coluna_erro = coluna_atual;
-                            linha_erro = linha_atual;
-                            coluna_atual += yyleng;
-                            return UNDEF;
-                        }
-                        guarda_lexema();
-                        coluna_atual += yyleng;
-                        return CHARCONST;
-                    }
+'({ESCAPE}|[^'\n])?'        {
+                                if(strstr(yytext, "\\0") != NULL)
+                                {
+                                    microc_yylval.error_msg = "CHAR contem caractere nulo";
+                                    coluna_erro = coluna_atual;
+                                    linha_erro = linha_atual;
+                                    coluna_atual += yyleng;
+                                    return UNDEF;
+                                }
+                                guarda_lexema();
+                                coluna_atual += yyleng;
+                                return CHARCONST;
+                            }
+
+'({ESCAPE}|[^'\n]){2,}'     {
+                                microc_yylval.error_msg = "CHAR nao pode conter mais de um caractere";
+                                coluna_erro = coluna_atual;
+                                linha_erro = linha_atual;
+                                coluna_atual += yyleng;
+                                return UNDEF;
+                            }
+
+'({ESCAPE}|[^'\n])*\n       {
+                                microc_yylval.error_msg = "CHAR nao terminado";
+                                coluna_erro = coluna_atual;
+                                linha_erro = linha_atual;
+                                linha_atual++;
+                                coluna_atual = 1;
+                                return UNDEF;
+                            }
 
 '                   {
                         BEGIN(CHAR);
                     }
 
-'[^'\n]{2,}'        {
-                        microc_yylval.error_msg = "CHAR nao pode conter mais de um caractere";
-                        coluna_erro = coluna_atual;
-                        linha_erro = linha_atual;
-                        coluna_atual += yyleng;
-                        return UNDEF;
-                    }
-
-'[^'\n]*\n          {
-                        microc_yylval.error_msg = "CHAR nao terminado";
-                        coluna_erro = coluna_atual;
-                        linha_erro = linha_atual;
-                        linha_atual++;
-                        coluna_atual = 1;
-                        return UNDEF;
-                    }
-
  /* --- Constantes de string -------------------------------------------- */
 
-\"[^"\n]*\"         {
-                        if(memchr(yytext, '\0', yyleng) != NULL)
-                        {
-                            microc_yylval.error_msg = "STRING contem caractere nulo";
-                            coluna_erro = coluna_atual;
-                            linha_erro = linha_atual;
-                            coluna_atual += yyleng;
-                            return UNDEF;
-                        }
-                        guarda_lexema();
-                        coluna_atual += yyleng;
-                        return STRINGCONST;
-                    }
+\"({ESCAPE}|[^"\n])*\"      {
+                                if(strstr(yytext, "\\0") != NULL)
+                                {
+                                    microc_yylval.error_msg = "STRING contem caractere nulo";
+                                    coluna_erro = coluna_atual;
+                                    linha_erro = linha_atual;
+                                    coluna_atual += yyleng;
+                                    return UNDEF;
+                                }
+                                guarda_lexema();
+                                coluna_atual += yyleng;
+                                return STRINGCONST;
+                            }
+
+\"({ESCAPE}|[^"\n])*\n      {
+                                microc_yylval.error_msg = "STRING nao terminada";
+                                coluna_erro = coluna_atual;
+                                linha_erro = linha_atual;
+                                linha_atual++;
+                                coluna_atual = 1;
+                                return UNDEF;
+                            }
 
 \"                  {
                         BEGIN(STRING);
-                    }
-
-\"[^"\n]*\n         {
-                        microc_yylval.error_msg = "STRING nao terminada";
-                        coluna_erro = coluna_atual;
-                        linha_erro = linha_atual;
-                        linha_atual++;
-                        coluna_atual = 1;
-                        return UNDEF;
                     }
 
  /* --- Operadores relacionais e logicos -------------------------------- */
