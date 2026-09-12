@@ -107,11 +107,51 @@ int coluna_atual = 1;
 int coluna_erro = 1;
 
 /* Funcao auxiliar para preencher microc_yylval.symbol com uma copia do
- * texto reconhecido (yytext). Sinta-se livre para usar/adaptar. */
+ * texto reconhecido (yytext). */
 
 static void guarda_lexema(void) 
 {
     microc_yylval.symbol = strdup(yytext);
+}
+
+static void guarda_lexema_str_char(void) 
+{
+    int tam = strlen(yytext);
+    char *dest = malloc(tam); // Aloca espaço suficiente (será menor ou igual a yytext)
+    int j = 0;
+
+    // Ignora a primeira e a última aspa (ou apóstrofo)
+    for (int i = 1; i < tam-1; i++) 
+    {
+        if (yytext[i] == '\\' &&  i+1 < tam-1) 
+        {
+            i++; // Pula a barra
+            switch (yytext[i]) 
+            {
+                case 'n': 
+                    dest[j++] = '\n'; 
+                    break;
+                case 't': 
+                    dest[j++] = '\t'; 
+                    break;
+                case '\\': 
+                    dest[j++] = '\\'; 
+                    break;
+                case '\"': 
+                    dest[j++] = '\"'; 
+                    break;
+                default:  
+                    dest[j++] = yytext[i]; 
+                    break;
+            }
+        } 
+        else 
+        {
+            dest[j++] = yytext[i];
+        }
+    }
+    dest[j] = '\0'; // Fecha a string
+    microc_yylval.symbol = dest;
 }
 
 %}
@@ -156,7 +196,7 @@ ESCAPE      \\[nt\\\"0]
                         coluna_atual += yyleng; 
                     }
 
- /* --- Caracteres de escape ---------------------------- */
+ /* --- Caracteres de escape -------------------------------------------- */
 
 {ESCAPE}            { 
                         microc_yylval.error_msg = strdup(yytext);
@@ -241,7 +281,7 @@ ESCAPE      \\[nt\\\"0]
                                     coluna_atual += yyleng;
                                     return UNDEF;
                                 }
-                                guarda_lexema();
+                                guarda_lexema_str_char();
                                 coluna_atual += yyleng;
                                 return CHARCONST;
                             }
@@ -278,7 +318,7 @@ ESCAPE      \\[nt\\\"0]
                                     coluna_atual += yyleng;
                                     return UNDEF;
                                 }
-                                guarda_lexema();
+                                guarda_lexema_str_char();
                                 coluna_atual += yyleng;
                                 return STRINGCONST;
                             }
@@ -470,7 +510,7 @@ int main(int argc, char **argv)
             fprintf(stderr, "ERRO LEXICO (linha %d, coluna %d): %s\n", linha_erro, coluna_erro, microc_yylval.error_msg);
             continue;
         }
-        printf("Token: tipo = %-13s lexema = '%s'  linha = %d\n", nome_token[tipo], yytext, linha_atual);
+        printf("Token: tipo = %-13s lexema = (%s)  linha = %d\n", nome_token[tipo], yytext, linha_atual);
     }
 
     if(YY_START == STRING)
@@ -502,7 +542,7 @@ int main(int argc, char **argv)
 
     else
     {
-        printf("Token: tipo = %-13s lexema = ''  linha = %d\n", nome_token[tipo], linha_atual);
+        printf("Token: tipo = %-13s lexema = ()  linha = %d\n", nome_token[tipo], linha_atual);
     }
 
     fclose(arquivo_fonte);
