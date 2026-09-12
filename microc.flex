@@ -163,7 +163,7 @@ static void guarda_lexema_str_char(void)
 DIGIT       [0-9]
 LETRA       [a-zA-Z_]
 ALFANUM     [a-zA-Z0-9_]
-ESCAPE      \\[nt\\\"0]
+ESCAPE      \\[nt"0\\]
 
 %x COMMENT
 %x STRING
@@ -309,28 +309,28 @@ ESCAPE      \\[nt\\\"0]
 
  /* --- Constantes de string -------------------------------------------- */
 
-\"({ESCAPE}|[^"\n])*\"      {
-                                if(strstr(yytext, "\\0") != NULL)
-                                {
-                                    microc_yylval.error_msg = "STRING contem caractere nulo";
-                                    coluna_erro = coluna_atual;
-                                    linha_erro = linha_atual;
-                                    coluna_atual += yyleng;
-                                    return UNDEF;
-                                }
-                                guarda_lexema_str_char();
-                                coluna_atual += yyleng;
-                                return STRINGCONST;
-                            }
-
-\"({ESCAPE}|[^"\n])*\n      {
-                                microc_yylval.error_msg = "STRING nao terminada";
+\"([^\n"\\]|\\.)*\"     {
+                            if(strstr(yytext, "\\0") != NULL)
+                            {
+                                microc_yylval.error_msg = "STRING contem caractere nulo";
                                 coluna_erro = coluna_atual;
                                 linha_erro = linha_atual;
-                                linha_atual++;
-                                coluna_atual = 1;
+                                coluna_atual += yyleng;
                                 return UNDEF;
                             }
+                            guarda_lexema_str_char();
+                            coluna_atual += yyleng;
+                            return STRINGCONST;
+                        }
+
+\"([^\n"\\]|\\.)*\n     {
+                            microc_yylval.error_msg = "STRING nao terminada";
+                            coluna_erro = coluna_atual;
+                            linha_erro = linha_atual;
+                            linha_atual++;
+                            coluna_atual = 1;
+                            return UNDEF;
+                        }
 
 \"                  {
                         BEGIN(STRING);
