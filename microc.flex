@@ -368,7 +368,7 @@ ESCAPE      \\[nt"0\\]
  /* --- Constantes de caractere ----------------------------------------- */
 
 '({ESCAPE}|[^'\n])?'        {
-                                if(strstr(yytext, "\\0") != NULL)
+                                if(memchr(yytext, '\0', yyleng) != NULL)
                                 {
                                     microc_yylval.error_msg = "CHAR contem caractere nulo";
                                     coluna_erro = coluna_atual;
@@ -405,7 +405,7 @@ ESCAPE      \\[nt"0\\]
  /* --- Constantes de string -------------------------------------------- */
 
 \"([^\n"\\]|\\.)*\"     {
-                            if(strstr(yytext, "\\0") != NULL)
+                            if(memchr(yytext, '\0', yyleng) != NULL)
                             {
                                 microc_yylval.error_msg = "STRING contem caractere nulo";
                                 coluna_erro = coluna_atual;

@@ -1190,7 +1190,7 @@ case 13:
 YY_RULE_SETUP
 #line 371 "microc.flex"
 {
-                                if(strstr(yytext, "\\0") != NULL)
+                                if(memchr(yytext, '\0', yyleng) != NULL)
                                 {
                                     microc_yylval.error_msg = "CHAR contem caractere nulo";
                                     coluna_erro = coluna_atual;
@@ -1239,7 +1239,7 @@ case 17:
 YY_RULE_SETUP
 #line 408 "microc.flex"
 {
-                            if(strstr(yytext, "\\0") != NULL)
+                            if(memchr(yytext, '\0', yyleng) != NULL)
                             {
                                 microc_yylval.error_msg = "STRING contem caractere nulo";
                                 coluna_erro = coluna_atual;
