@@ -78,8 +78,8 @@ static const int num_tokens = 37;
 
 static const int num_palavras_reservadas = 8;
 
-/* Lista de palavras reservadas, usada para verificação quando o token 
- * for um ID. */
+/* Lista de palavras reservadas, usada para verificação quando o token for
+ * um ID. */
 
 static const char *palavras_reservadas[] = 
 {
@@ -97,35 +97,118 @@ YYSTYPE;
 
 YYSTYPE microc_yylval;
 
-/* Linha atual do arquivo-fonte sendo processado. Deve ser incrementada
- * toda vez que uma quebra de linha for consumida pelo scanner (seja em
- * codigo "normal", dentro de comentarios ou dentro de strings). */
+/* Nos da lista encadeada usada como tabela de strings. */
 
-int linha_atual = 1;
-int linha_erro = 1;
-int coluna_atual = 1;
-int coluna_erro = 1;
+typedef struct Node
+{
+    char *lexema;           /* lexemas armazenados */
+    struct Node *prox_no;   /* ponteiro para o proximo no */
+} 
+Node;
 
-/* Funcao auxiliar para preencher microc_yylval.symbol com uma copia do
- * texto reconhecido (yytext). */
+Node *tabela_strings = NULL;
+
+/* Funcoes para manipular a tabela de strings */
+
+void imprime_tabela(void)
+{
+    Node *p;
+
+    for(p = tabela_strings; p != NULL; p = p->prox_no)
+    {
+        printf("%s\n", p->lexema);
+    }
+}
+
+Node* busca_tabela(char *lexema)
+{
+    Node *p = tabela_strings;
+
+    while(p != NULL)
+    {
+        if(strcmp(p->lexema, lexema) == 0)
+        {
+            return p;   /* Encontrou */
+        }
+        p = p->prox_no;
+    }
+
+    return NULL;    /* Nao encontrou */
+}
+
+char* add_tabela(char *lexema)
+{
+    Node *p;
+    Node *novo;
+
+    /* Busca na tabela para nao duplicar lexemas */
+
+    p = busca_tabela(lexema);
+
+    if(p != NULL)
+    {
+        return p->lexema;
+    }
+
+    /* Cria o novo no */
+
+    novo = (Node *) malloc(sizeof(Node));
+
+    if(novo == NULL)
+    {
+        fprintf(stderr, "Erro: Falha ao alocar memoria.\n");
+        exit(1);
+    }
+
+    novo->prox_no = NULL;
+    novo->lexema = strdup(lexema);
+
+    /* Insere o novo no na tabela de strings */
+
+    if(tabela_strings == NULL)
+    {
+        tabela_strings = novo;
+    }
+    else
+    {
+        p = tabela_strings;
+        while(p->prox_no != NULL)
+        {
+            p = p->prox_no;
+        }
+        p->prox_no = novo;
+    }
+
+    return novo->lexema;
+}
+
+/* Funcoes auxiliares para preencher microc_yylval.symbol com um ponteiro para
+ * o texto reconhecido (yytext). */
 
 static void guarda_lexema(void) 
 {
-    microc_yylval.symbol = strdup(yytext);
+    microc_yylval.symbol = add_tabela(yytext);
 }
 
 static void guarda_lexema_str_char(void) 
 {
-    int tam = strlen(yytext);
-    char *dest = malloc(tam); // Aloca espaço suficiente (será menor ou igual a yytext)
     int j = 0;
+    int tam = strlen(yytext);
+    char *dest = malloc(tam);   /* Aloca espaço suficiente (será menor ou igual a yytext) */
 
-    // Ignora a primeira e a última aspa (ou apóstrofo)
+    if(dest == NULL)
+    {
+        fprintf(stderr, "Erro: Falha ao alocar memoria.\n");
+        exit(1);
+    }
+
+    /* Ignora a primeira e a última aspa */
+
     for (int i = 1; i < tam-1; i++) 
     {
         if (yytext[i] == '\\' &&  i+1 < tam-1) 
         {
-            i++; // Pula a barra
+            i++;    /* Pula a barra */
             switch (yytext[i]) 
             {
                 case 'n': 
@@ -140,9 +223,6 @@ static void guarda_lexema_str_char(void)
                 case '\"': 
                     dest[j++] = '\"'; 
                     break;
-                case '0': 
-                    dest[j++] = '\0'; 
-                    break;
                 default:  
                     dest[j++] = yytext[i]; 
                     break;
@@ -153,9 +233,21 @@ static void guarda_lexema_str_char(void)
             dest[j++] = yytext[i];
         }
     }
-    dest[j] = '\0'; // Fecha a string
-    microc_yylval.symbol = dest;
+
+    dest[j] = '\0';     /* Fecha a string */
+    microc_yylval.symbol = add_tabela(dest);
+    free(dest);
 }
+
+/* Linha atual e coluna atual do arquivo-fonte sendo processado. */
+
+int linha_atual = 1;
+int coluna_atual = 1;
+
+/* Linha e coluna indicando onde o erro lexico comecou. */
+
+int linha_erro = 1;
+int coluna_erro = 1;
 
 %}
 
@@ -276,7 +368,7 @@ ESCAPE      \\[nt"0\\]
  /* --- Constantes de caractere ----------------------------------------- */
 
 '({ESCAPE}|[^'\n])?'        {
-                                if(memchr(yytext, '\0', yyleng) != NULL)
+                                if(strstr(yytext, "\\0") != NULL)
                                 {
                                     microc_yylval.error_msg = "CHAR contem caractere nulo";
                                     coluna_erro = coluna_atual;
@@ -313,7 +405,7 @@ ESCAPE      \\[nt"0\\]
  /* --- Constantes de string -------------------------------------------- */
 
 \"([^\n"\\]|\\.)*\"     {
-                            if(memchr(yytext, '\0', yyleng) != NULL)
+                            if(strstr(yytext, "\\0") != NULL)
                             {
                                 microc_yylval.error_msg = "STRING contem caractere nulo";
                                 coluna_erro = coluna_atual;
