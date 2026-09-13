@@ -258,7 +258,7 @@ int coluna_erro = 1;
 DIGIT       [0-9]
 LETRA       [a-zA-Z_]
 ALFANUM     [a-zA-Z0-9_]
-ESCAPE      \\[nt"0\\]
+ESCAPE      \\[nt"\\]
 
 %x COMMENT
 %x STRING
