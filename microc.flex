@@ -291,16 +291,6 @@ ESCAPE      \\[nt"\\]
                         coluna_atual += yyleng; 
                     }
 
- /* --- Caracteres de escape -------------------------------------------- */
-
-{ESCAPE}            { 
-                        microc_yylval.error_msg = strdup(yytext);
-                        coluna_erro = coluna_atual;
-                        linha_erro = linha_atual;
-                        coluna_atual += yyleng;
-                        return UNDEF;
-                    }
-
  /* --- Comentarios ------------------------------------------------------
   * Estes ja estao implementados como exemplo de uso de estados (%x) e
   * de tratamento de erro via EOF dentro de um estado especial. */
