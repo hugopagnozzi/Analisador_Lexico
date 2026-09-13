@@ -321,6 +321,8 @@ ESCAPE      \\[nt"\\]
 
 "*/"                {
                         microc_yylval.error_msg = "Comentario nao iniciado";
+                        coluna_erro = coluna_atual;
+                        coluna_atual += yyleng;
                         return UNDEF;
                     }
 
