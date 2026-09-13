@@ -654,6 +654,9 @@ static void guarda_lexema_str_char(void)
                 case '\"': 
                     dest[j++] = '\"'; 
                     break;
+                case '0': 
+                    dest[j++] = '\0'; 
+                    break;
                 default:  
                     dest[j++] = yytext[i]; 
                     break;
@@ -668,12 +671,12 @@ static void guarda_lexema_str_char(void)
     microc_yylval.symbol = dest;
 }
 
-#line 672 "lex.yy.c"
+#line 675 "lex.yy.c"
 /* -----------------------------------------------------------------------
  * 2. SECAO DE DEFINICOES
  * ------------------------------------------------------------------- */
 
-#line 677 "lex.yy.c"
+#line 680 "lex.yy.c"
 
 #define INITIAL 0
 #define COMMENT 1
@@ -893,10 +896,10 @@ YY_DECL
 		}
 
 	{
-#line 172 "microc.flex"
-
-
 #line 175 "microc.flex"
+
+
+#line 178 "microc.flex"
  /* -----------------------------------------------------------------------
   * 3. SECAO DE REGRAS
   * --------------------------------------------------------------------- */
@@ -907,7 +910,7 @@ YY_DECL
   * dependessemos do comportamento padrao, um erro lexico seria
   * confundido com o fim do arquivo pelo main() de teste abaixo. */
 
-#line 911 "lex.yy.c"
+#line 914 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -968,7 +971,7 @@ case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(COMMENT):
 case YY_STATE_EOF(STRING):
 case YY_STATE_EOF(CHAR):
-#line 185 "microc.flex"
+#line 188 "microc.flex"
 {
                         return END_OF_FILE; 
                     }
@@ -977,7 +980,7 @@ case YY_STATE_EOF(CHAR):
 case 1:
 /* rule 1 can match eol */
 YY_RULE_SETUP
-#line 191 "microc.flex"
+#line 194 "microc.flex"
 { 
                         linha_atual++;
                         coluna_atual = 1;
@@ -985,7 +988,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 196 "microc.flex"
+#line 199 "microc.flex"
 { 
                         coluna_atual += yyleng; 
                     }
@@ -993,7 +996,7 @@ YY_RULE_SETUP
 /* --- Caracteres de escape -------------------------------------------- */
 case 3:
 YY_RULE_SETUP
-#line 202 "microc.flex"
+#line 205 "microc.flex"
 { 
                         microc_yylval.error_msg = strdup(yytext);
                         coluna_erro = coluna_atual;
@@ -1007,14 +1010,14 @@ YY_RULE_SETUP
   * de tratamento de erro via EOF dentro de um estado especial. */
 case 4:
 YY_RULE_SETUP
-#line 214 "microc.flex"
+#line 217 "microc.flex"
 { 
                         /* comentario de linha: ignora ate o fim da linha */ 
                     }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 218 "microc.flex"
+#line 221 "microc.flex"
 { 
                         BEGIN(COMMENT); 
                         coluna_atual += yyleng;
@@ -1022,7 +1025,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 223 "microc.flex"
+#line 226 "microc.flex"
 { 
                         BEGIN(INITIAL); 
                         coluna_atual += yyleng;
@@ -1031,14 +1034,14 @@ YY_RULE_SETUP
 case 7:
 /* rule 7 can match eol */
 YY_RULE_SETUP
-#line 228 "microc.flex"
+#line 231 "microc.flex"
 { 
                         linha_atual++; 
                     }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 232 "microc.flex"
+#line 235 "microc.flex"
 { 
                         coluna_atual += yyleng; 
                     }
@@ -1046,7 +1049,7 @@ YY_RULE_SETUP
 /* Fechamento de comentario sem abertura correspondente. */
 case 9:
 YY_RULE_SETUP
-#line 238 "microc.flex"
+#line 241 "microc.flex"
 {
                         microc_yylval.error_msg = "Comentario nao iniciado";
                         return UNDEF;
@@ -1055,7 +1058,7 @@ YY_RULE_SETUP
 /* --- Palavras reservadas e identificadores --------------------------- */
 case 10:
 YY_RULE_SETUP
-#line 245 "microc.flex"
+#line 248 "microc.flex"
 {
                         coluna_atual += yyleng;
                         for(int i = 0; i < num_palavras_reservadas; i++)
@@ -1071,7 +1074,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 258 "microc.flex"
+#line 261 "microc.flex"
 {
                                     microc_yylval.error_msg = "Identificador nao pode comecar com numero";
                                     coluna_erro = coluna_atual;
@@ -1083,7 +1086,7 @@ YY_RULE_SETUP
 /* --- Constantes inteiras --------------------------------------------- */
 case 12:
 YY_RULE_SETUP
-#line 268 "microc.flex"
+#line 271 "microc.flex"
 {
                         guarda_lexema();
                         coluna_atual += yyleng;
@@ -1093,9 +1096,9 @@ YY_RULE_SETUP
 /* --- Constantes de caractere ----------------------------------------- */
 case 13:
 YY_RULE_SETUP
-#line 276 "microc.flex"
+#line 279 "microc.flex"
 {
-                                if(strstr(yytext, "\\0") != NULL)
+                                if(memchr(yytext, '\0', yyleng) != NULL)
                                 {
                                     microc_yylval.error_msg = "CHAR contem caractere nulo";
                                     coluna_erro = coluna_atual;
@@ -1110,7 +1113,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 290 "microc.flex"
+#line 293 "microc.flex"
 {
                                 microc_yylval.error_msg = "CHAR nao pode conter mais de um caractere";
                                 coluna_erro = coluna_atual;
@@ -1122,7 +1125,7 @@ YY_RULE_SETUP
 case 15:
 /* rule 15 can match eol */
 YY_RULE_SETUP
-#line 298 "microc.flex"
+#line 301 "microc.flex"
 {
                                 microc_yylval.error_msg = "CHAR nao terminado";
                                 coluna_erro = coluna_atual;
@@ -1134,7 +1137,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 307 "microc.flex"
+#line 310 "microc.flex"
 {
                         BEGIN(CHAR);
                     }
@@ -1142,9 +1145,9 @@ YY_RULE_SETUP
 /* --- Constantes de string -------------------------------------------- */
 case 17:
 YY_RULE_SETUP
-#line 313 "microc.flex"
+#line 316 "microc.flex"
 {
-                            if(strstr(yytext, "\\0") != NULL)
+                            if(memchr(yytext, '\0', yyleng) != NULL)
                             {
                                 microc_yylval.error_msg = "STRING contem caractere nulo";
                                 coluna_erro = coluna_atual;
@@ -1160,7 +1163,7 @@ YY_RULE_SETUP
 case 18:
 /* rule 18 can match eol */
 YY_RULE_SETUP
-#line 327 "microc.flex"
+#line 330 "microc.flex"
 {
                             microc_yylval.error_msg = "STRING nao terminada";
                             coluna_erro = coluna_atual;
@@ -1172,7 +1175,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 336 "microc.flex"
+#line 339 "microc.flex"
 {
                         BEGIN(STRING);
                     }
@@ -1180,7 +1183,7 @@ YY_RULE_SETUP
 /* --- Operadores relacionais e logicos -------------------------------- */
 case 20:
 YY_RULE_SETUP
-#line 342 "microc.flex"
+#line 345 "microc.flex"
 { 
                         coluna_atual += yyleng;
                         return EQ; 
@@ -1188,7 +1191,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 347 "microc.flex"
+#line 350 "microc.flex"
 { 
                         coluna_atual += yyleng;
                         return ASSIGN; 
@@ -1196,7 +1199,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 352 "microc.flex"
+#line 355 "microc.flex"
 {
                         coluna_atual += yyleng;
                         return NEQ;
@@ -1204,7 +1207,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 357 "microc.flex"
+#line 360 "microc.flex"
 {
                         coluna_atual += yyleng;
                         return NOT;
@@ -1212,7 +1215,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 362 "microc.flex"
+#line 365 "microc.flex"
 {
                         coluna_atual += yyleng;
                         return LEQ;
@@ -1220,7 +1223,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 367 "microc.flex"
+#line 370 "microc.flex"
 {
                         coluna_atual += yyleng;
                         return LT;
@@ -1228,7 +1231,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 372 "microc.flex"
+#line 375 "microc.flex"
 {
                         coluna_atual += yyleng;
                         return GEQ;
@@ -1236,7 +1239,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 377 "microc.flex"
+#line 380 "microc.flex"
 {
                         coluna_atual += yyleng;
                         return GT;
@@ -1244,7 +1247,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 382 "microc.flex"
+#line 385 "microc.flex"
 {
                         coluna_atual += yyleng;
                         return AND;
@@ -1252,7 +1255,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 387 "microc.flex"
+#line 390 "microc.flex"
 {
                         coluna_atual += yyleng;
                         return OR;
@@ -1261,7 +1264,7 @@ YY_RULE_SETUP
 /* --- Operadores aritmeticos e simbolos de pontuacao ------------------ */
 case 30:
 YY_RULE_SETUP
-#line 394 "microc.flex"
+#line 397 "microc.flex"
 { 
                         coluna_atual += yyleng;
                         return PLUS; 
@@ -1269,7 +1272,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 399 "microc.flex"
+#line 402 "microc.flex"
 { 
                         coluna_atual += yyleng;
                         return MINUS; 
@@ -1277,7 +1280,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 404 "microc.flex"
+#line 407 "microc.flex"
 { 
                         coluna_atual += yyleng;
                         return MUL; 
@@ -1285,7 +1288,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 409 "microc.flex"
+#line 412 "microc.flex"
 { 
                         coluna_atual += yyleng;
                         return DIV; 
@@ -1293,7 +1296,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 414 "microc.flex"
+#line 417 "microc.flex"
 { 
                         coluna_atual += yyleng;
                         return MOD; 
@@ -1301,7 +1304,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 419 "microc.flex"
+#line 422 "microc.flex"
 { 
                         coluna_atual += yyleng;
                         return SEMICOLON; 
@@ -1309,7 +1312,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 424 "microc.flex"
+#line 427 "microc.flex"
 { 
                         coluna_atual += yyleng;
                         return COMMA; 
@@ -1317,7 +1320,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 429 "microc.flex"
+#line 432 "microc.flex"
 { 
                         coluna_atual += yyleng;
                         return LPAREN; 
@@ -1325,7 +1328,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 434 "microc.flex"
+#line 437 "microc.flex"
 { 
                         coluna_atual += yyleng;
                         return RPAREN; 
@@ -1333,7 +1336,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 439 "microc.flex"
+#line 442 "microc.flex"
 { 
                         coluna_atual += yyleng;
                         return LBRACE; 
@@ -1341,7 +1344,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 444 "microc.flex"
+#line 447 "microc.flex"
 { 
                         coluna_atual += yyleng;
                         return RBRACE; 
@@ -1349,7 +1352,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 449 "microc.flex"
+#line 452 "microc.flex"
 { 
                         coluna_atual += yyleng;
                         return LBRACKET; 
@@ -1357,7 +1360,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 454 "microc.flex"
+#line 457 "microc.flex"
 { 
                         coluna_atual += yyleng;
                         return RBRACKET; 
@@ -1368,7 +1371,7 @@ YY_RULE_SETUP
   * regra anterior. Deve ser SEMPRE a ultima regra do arquivo. */
 case 43:
 YY_RULE_SETUP
-#line 463 "microc.flex"
+#line 466 "microc.flex"
 {
                         microc_yylval.error_msg = strdup(yytext);
                         coluna_erro = coluna_atual;
@@ -1379,10 +1382,10 @@ YY_RULE_SETUP
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 471 "microc.flex"
+#line 474 "microc.flex"
 ECHO;
 	YY_BREAK
-#line 1386 "lex.yy.c"
+#line 1389 "lex.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2385,7 +2388,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 471 "microc.flex"
+#line 474 "microc.flex"
 
 
 /* -----------------------------------------------------------------------
@@ -2454,7 +2457,7 @@ int main(int argc, char **argv)
     {
         BEGIN(INITIAL);
         microc_yylval.error_msg = "EOF em comentario";
-        coluna_erro = coluna_atual-2;
+        coluna_erro = coluna_atual;
         linha_erro = linha_atual;
         fprintf(stderr, "ERRO LEXICO (linha %d, coluna %d): %s\n", linha_erro, coluna_erro, microc_yylval.error_msg);
     }

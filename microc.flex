@@ -140,6 +140,9 @@ static void guarda_lexema_str_char(void)
                 case '\"': 
                     dest[j++] = '\"'; 
                     break;
+                case '0': 
+                    dest[j++] = '\0'; 
+                    break;
                 default:  
                     dest[j++] = yytext[i]; 
                     break;
@@ -273,7 +276,7 @@ ESCAPE      \\[nt"0\\]
  /* --- Constantes de caractere ----------------------------------------- */
 
 '({ESCAPE}|[^'\n])?'        {
-                                if(strstr(yytext, "\\0") != NULL)
+                                if(memchr(yytext, '\0', yyleng) != NULL)
                                 {
                                     microc_yylval.error_msg = "CHAR contem caractere nulo";
                                     coluna_erro = coluna_atual;
@@ -310,7 +313,7 @@ ESCAPE      \\[nt"0\\]
  /* --- Constantes de string -------------------------------------------- */
 
 \"([^\n"\\]|\\.)*\"     {
-                            if(strstr(yytext, "\\0") != NULL)
+                            if(memchr(yytext, '\0', yyleng) != NULL)
                             {
                                 microc_yylval.error_msg = "STRING contem caractere nulo";
                                 coluna_erro = coluna_atual;
@@ -535,7 +538,7 @@ int main(int argc, char **argv)
     {
         BEGIN(INITIAL);
         microc_yylval.error_msg = "EOF em comentario";
-        coluna_erro = coluna_atual-2;
+        coluna_erro = coluna_atual;
         linha_erro = linha_atual;
         fprintf(stderr, "ERRO LEXICO (linha %d, coluna %d): %s\n", linha_erro, coluna_erro, microc_yylval.error_msg);
     }
