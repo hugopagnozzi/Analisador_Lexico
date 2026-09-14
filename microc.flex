@@ -132,7 +132,6 @@ Node* busca_tabela(char *lexema)
         }
         p = p->prox_no;
     }
-
     return NULL;    /* Nao encontrou */
 }
 
@@ -178,7 +177,6 @@ char* add_tabela(char *lexema)
         }
         p->prox_no = novo;
     }
-
     return novo->lexema;
 }
 
@@ -204,36 +202,41 @@ static void guarda_lexema_str_char(void)
 
     /* Ignora a primeira e a última aspa */
 
-    for (int i = 1; i < tam-1; i++) 
+    for(int i = 1; i < tam-1; i++) 
     {
-        if (yytext[i] == '\\' &&  i+1 < tam-1) 
+        if(yytext[i] == '\\' &&  i+1 < tam-1) 
         {
             i++;    /* Pula a barra */
             switch (yytext[i]) 
             {
                 case 'n': 
-                    dest[j++] = '\n'; 
+                    dest[j] = '\n'; 
+                    j++;
                     break;
                 case 't': 
-                    dest[j++] = '\t'; 
+                    dest[j] = '\t'; 
+                    j++;
                     break;
                 case '\\': 
-                    dest[j++] = '\\'; 
+                    dest[j] = '\\'; 
+                    j++;
                     break;
                 case '\"': 
-                    dest[j++] = '\"'; 
+                    dest[j] = '\"'; 
+                    j++;
                     break;
                 default:  
-                    dest[j++] = yytext[i]; 
+                    dest[j] = yytext[i]; 
+                    j++;
                     break;
             }
         } 
         else 
         {
-            dest[j++] = yytext[i];
+            dest[j] = yytext[i];
+            j++;
         }
     }
-
     dest[j] = '\0';     /* Fecha a string */
     microc_yylval.symbol = add_tabela(dest);
     free(dest);
@@ -248,7 +251,6 @@ int coluna_atual = 1;
 
 int linha_erro = 1;
 int coluna_erro = 1;
-
 %}
 
 /* -----------------------------------------------------------------------
@@ -599,7 +601,7 @@ int yywrap(void)
 
 int main(int argc, char **argv) 
 {
-    if (argc < 2) 
+    if(argc < 2) 
     {
         fprintf(stderr, "Uso: %s <arquivo.mc>\n", argv[0]);
         return 1;
@@ -607,7 +609,7 @@ int main(int argc, char **argv)
 
     FILE *arquivo_fonte = fopen(argv[1], "r");
 
-    if (!arquivo_fonte) 
+    if(!arquivo_fonte) 
     {
         fprintf(stderr, "Erro: nao foi possivel abrir o arquivo '%s'\n", argv[1]);
         return 1;
@@ -616,16 +618,20 @@ int main(int argc, char **argv)
     yyin = arquivo_fonte;
     int tipo;
 
-    while ((tipo = yylex()) != END_OF_FILE) 
+    while((tipo = yylex()) != END_OF_FILE) 
     {
-        if (tipo == UNDEF) 
+        if(tipo == UNDEF) 
         {
             fprintf(stderr, "ERRO LEXICO (linha %d, coluna %d): %s\n", linha_erro, coluna_erro, microc_yylval.error_msg);
             continue;
         }
+        if(tipo == ID || tipo == INTEGERCONST || tipo == CHARCONST || tipo == STRINGCONST)
+        {
+            printf("Token: tipo = %-13s lexema = (%s)  linha = %d\n", nome_token[tipo], microc_yylval.symbol, linha_atual);
+            continue;
+        }
         printf("Token: tipo = %-13s lexema = (%s)  linha = %d\n", nome_token[tipo], yytext, linha_atual);
     }
-
     printf("Token: tipo = %-13s lexema = ()  linha = %d\n", nome_token[tipo], linha_atual);
     fclose(arquivo_fonte);
     return 0;
