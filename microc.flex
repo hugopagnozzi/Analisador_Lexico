@@ -277,6 +277,28 @@ ESCAPE      \\[nt"\\]
   * confundido com o fim do arquivo pelo main() de teste abaixo. */
 
 <<EOF>>             {
+                        if(YY_START == STRING)
+                        {
+                            BEGIN(INITIAL);
+                            microc_yylval.error_msg = "EOF em STRING";
+                            coluna_erro = coluna_atual;
+                            linha_erro = linha_atual;
+                            return UNDEF;
+                        }
+                        if(YY_START == CHAR)
+                        {
+                            BEGIN(INITIAL);
+                            microc_yylval.error_msg = "EOF em CHAR";
+                            coluna_erro = coluna_atual;
+                            linha_erro = linha_atual;
+                            return UNDEF;
+                        }
+                        if(YY_START == COMMENT)
+                        {
+                            BEGIN(INITIAL);
+                            microc_yylval.error_msg = "EOF em comentario";
+                            return UNDEF;
+                        }
                         return END_OF_FILE; 
                     }
 
@@ -300,7 +322,9 @@ ESCAPE      \\[nt"\\]
                     }
 
 "/*"                { 
-                        BEGIN(COMMENT); 
+                        BEGIN(COMMENT);
+                        linha_erro = linha_atual;
+                        coluna_erro = coluna_atual;
                         coluna_atual += yyleng;
                     }
 
@@ -310,7 +334,8 @@ ESCAPE      \\[nt"\\]
                     }
 
 <COMMENT>\n         { 
-                        linha_atual++; 
+                        linha_atual++;
+                        coluna_atual = 1;
                     }
 
 <COMMENT>.          { 
@@ -322,6 +347,7 @@ ESCAPE      \\[nt"\\]
 "*/"                {
                         microc_yylval.error_msg = "Comentario nao iniciado";
                         coluna_erro = coluna_atual;
+                        linha_erro = linha_atual;
                         coluna_atual += yyleng;
                         return UNDEF;
                     }
@@ -390,9 +416,9 @@ ESCAPE      \\[nt"\\]
                                 return UNDEF;
                             }
 
-'                   {
-                        BEGIN(CHAR);
-                    }
+'({ESCAPE}|[^'\n])*         {
+                                BEGIN(CHAR);
+                            }
 
  /* --- Constantes de string -------------------------------------------- */
 
@@ -419,9 +445,9 @@ ESCAPE      \\[nt"\\]
                             return UNDEF;
                         }
 
-\"                  {
-                        BEGIN(STRING);
-                    }
+\"([^\n"\\]|\\.)*       {
+                            BEGIN(STRING);
+                        }
 
  /* --- Operadores relacionais e logicos -------------------------------- */
 
@@ -600,38 +626,7 @@ int main(int argc, char **argv)
         printf("Token: tipo = %-13s lexema = (%s)  linha = %d\n", nome_token[tipo], yytext, linha_atual);
     }
 
-    if(YY_START == STRING)
-    {
-        BEGIN(INITIAL);
-        microc_yylval.error_msg = "EOF em STRING";
-        coluna_erro = coluna_atual;
-        linha_erro = linha_atual;
-        fprintf(stderr, "ERRO LEXICO (linha %d, coluna %d): %s\n", linha_erro, coluna_erro, microc_yylval.error_msg);
-    }
-
-    else if(YY_START == CHAR)
-    {
-        BEGIN(INITIAL);
-        microc_yylval.error_msg = "EOF em CHAR";
-        coluna_erro = coluna_atual;
-        linha_erro = linha_atual;
-        fprintf(stderr, "ERRO LEXICO (linha %d, coluna %d): %s\n", linha_erro, coluna_erro, microc_yylval.error_msg);
-    }
-
-    else if(YY_START == COMMENT)
-    {
-        BEGIN(INITIAL);
-        microc_yylval.error_msg = "EOF em comentario";
-        coluna_erro = coluna_atual;
-        linha_erro = linha_atual;
-        fprintf(stderr, "ERRO LEXICO (linha %d, coluna %d): %s\n", linha_erro, coluna_erro, microc_yylval.error_msg);
-    }
-
-    else
-    {
-        printf("Token: tipo = %-13s lexema = ()  linha = %d\n", nome_token[tipo], linha_atual);
-    }
-
+    printf("Token: tipo = %-13s lexema = ()  linha = %d\n", nome_token[tipo], linha_atual);
     fclose(arquivo_fonte);
     return 0;
 }
