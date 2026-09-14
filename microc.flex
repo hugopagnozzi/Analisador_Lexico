@@ -207,7 +207,7 @@ static void guarda_lexema_str_char(void)
         if(yytext[i] == '\\' &&  i+1 < tam-1) 
         {
             i++;    /* Pula a barra */
-            switch (yytext[i]) 
+            switch(yytext[i]) 
             {
                 case 'n': 
                     dest[j] = '\n'; 
